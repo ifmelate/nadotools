@@ -19,10 +19,12 @@ function NavLink({
   href,
   children,
   onClick,
+  activeBg,
 }: {
   href: string;
   children: React.ReactNode;
   onClick?: () => void;
+  activeBg?: string;
 }) {
   const pathname = usePathname();
   const isActive =
@@ -33,13 +35,21 @@ function NavLink({
       href={href}
       onClick={onClick}
       className={cn(
-        "transition-colors",
+        "relative transition-colors pb-1",
         isActive
           ? "text-foreground font-medium"
           : "text-muted-foreground hover:text-foreground"
       )}
     >
       {children}
+      {isActive && (
+        <span
+          className={cn(
+            "absolute -bottom-px left-0 right-0 h-0.5 rounded-full",
+            activeBg || "bg-primary"
+          )}
+        />
+      )}
     </Link>
   );
 }
@@ -78,21 +88,22 @@ export function Header() {
   const [open, setOpen] = useState(false);
 
   const navItems = [
-    { href: "/convert", label: t("convert"), icon: ArrowRightLeft, color: "text-category-convert" },
-    { href: "/pdf", label: t("pdf"), icon: FileText, color: "text-category-pdf" },
-    { href: "/image", label: t("image"), icon: FileImage, color: "text-category-image" },
+    { href: "/convert", label: t("convert"), icon: ArrowRightLeft, color: "text-category-convert", activeBg: "bg-category-convert" },
+    { href: "/pdf", label: t("pdf"), icon: FileText, color: "text-category-pdf", activeBg: "bg-category-pdf" },
+    { href: "/image", label: t("image"), icon: FileImage, color: "text-category-image", activeBg: "bg-category-image" },
   ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link href="/" className="text-lg font-bold tracking-tight">
+          <Link href="/" className="font-display text-lg font-bold tracking-tight">
             {t("brand")}
+            <span className="text-primary">.</span>
           </Link>
-          <nav className="hidden sm:flex items-center gap-4 text-sm">
+          <nav className="hidden sm:flex items-center gap-5 text-sm">
             {navItems.map((item) => (
-              <NavLink key={item.href} href={item.href}>
+              <NavLink key={item.href} href={item.href} activeBg={item.activeBg}>
                 {item.label}
               </NavLink>
             ))}
@@ -113,7 +124,10 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] sm:max-w-[280px]">
               <SheetHeader className="border-b pb-4">
-                <SheetTitle className="text-lg font-bold">{t("brand")}</SheetTitle>
+                <SheetTitle className="font-display text-lg font-bold">
+                  {t("brand")}
+                  <span className="text-primary">.</span>
+                </SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col gap-1 px-4 py-2">
                 {navItems.map((item) => {

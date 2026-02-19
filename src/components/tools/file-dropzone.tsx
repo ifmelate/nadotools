@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Upload } from "lucide-react";
+import { Upload, FileUp } from "lucide-react";
 import { useFileDrop } from "@/hooks/use-file-drop";
 import { cn } from "@/lib/utils";
 
@@ -19,21 +19,58 @@ export function FileDropzone({ accept, multiple = true, onFiles }: FileDropzoneP
   return (
     <div
       className={cn(
-        "relative flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed p-12 sm:p-16 transition-colors cursor-pointer",
+        "dropzone-wrapper group relative flex flex-col items-center justify-center gap-5 rounded-xl p-12 sm:p-16 transition-all duration-300 cursor-pointer overflow-hidden",
         isDragging
-          ? "border-primary bg-primary/5"
-          : "border-muted-foreground/25 hover:border-muted-foreground/50"
+          ? "dropzone-active border-2 border-primary bg-primary/[0.06] shadow-[0_0_0_4px_var(--color-primary)/10,0_0_24px_var(--color-primary)/8] scale-[1.01]"
+          : "border-2 border-dashed border-muted-foreground/20 hover:border-muted-foreground/40 hover:bg-muted/30"
       )}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onClick={openPicker}
     >
-      <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
-      <p className="text-sm text-muted-foreground text-center">
-        <span className="hidden sm:inline">{t("dropFiles")}</span>
-        <span className="sm:hidden">{t("tapToSelect")}</span>
-      </p>
+      {/* Subtle background pattern */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.015] transition-opacity duration-300 group-hover:opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, currentColor 0.5px, transparent 0.5px)",
+          backgroundSize: "20px 20px",
+        }}
+      />
+
+      <div
+        className={cn(
+          "relative flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-300",
+          isDragging
+            ? "bg-primary/15 text-primary scale-110"
+            : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+        )}
+      >
+        {isDragging ? (
+          <FileUp className="h-6 w-6" />
+        ) : (
+          <Upload className="h-6 w-6 animate-float" />
+        )}
+      </div>
+
+      <div className="relative text-center space-y-1.5">
+        <p
+          className={cn(
+            "text-sm font-medium transition-colors duration-200",
+            isDragging ? "text-primary" : "text-foreground"
+          )}
+        >
+          <span className="hidden sm:inline">{t("dropFiles")}</span>
+          <span className="sm:hidden">{t("tapToSelect")}</span>
+        </p>
+        {accept && accept.length > 0 && (
+          <p className="text-xs text-muted-foreground/60">
+            {accept.map((a) => a.replace(".", "").toUpperCase()).join(", ")}
+          </p>
+        )}
+      </div>
+
       <input
         ref={inputRef}
         type="file"

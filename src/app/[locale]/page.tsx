@@ -11,6 +11,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import {
   Shield,
   ArrowRight,
@@ -115,93 +116,139 @@ export default async function LandingPage({
   const imageToolList = Object.values(imageTools);
 
   return (
-    <div className="space-y-20">
+    <div className="space-y-16 sm:space-y-24">
       {/* ── Hero Section ────────────────────────────────────────────────────── */}
-      <section className="relative flex flex-col items-center text-center pt-16 pb-6 space-y-6 overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -top-20 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,var(--color-primary)/12,transparent_70%)]" />
+      <section className="relative pt-16 sm:pt-24 pb-4 overflow-hidden">
+        {/* Layered background effects */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_-20%,var(--color-primary)/14,transparent_60%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_30%,var(--color-category-convert)/6,transparent_45%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_60%,var(--color-category-image)/5,transparent_40%)]" />
+          <div
+            className="absolute inset-0 opacity-[0.025]"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, currentColor 0.5px, transparent 0.5px)",
+              backgroundSize: "28px 28px",
+            }}
+          />
+        </div>
 
-        <Badge variant="outline" className="relative gap-1.5 px-3 py-1 text-sm border-primary/30 text-primary">
-          <Shield className="h-3.5 w-3.5" />
-          {tc("privacyBadge")}
-        </Badge>
-
-        <h1 className="relative text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent">
-          {tc("brand")}
-        </h1>
-
-        <p className="relative text-xl sm:text-2xl text-muted-foreground max-w-2xl leading-relaxed">
-          {t("hero")}
-        </p>
-
-        <p className="relative text-base text-muted-foreground/70 max-w-xl">
-          {t("heroSub")}
-        </p>
-      </section>
-
-      {/* ── How It Works ─────────────────────────────────────────────────── */}
-      <section className="-mt-10">
-        <div className="grid gap-8 sm:grid-cols-3 max-w-3xl mx-auto">
-          <div className="flex flex-col items-center text-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-              <MonitorSmartphone className="h-5 w-5 text-primary" />
-            </div>
-            <h3 className="text-sm font-semibold">{t("howItWorksStep1Title")}</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">{t("howItWorksStep1Desc")}</p>
+        <div className="relative space-y-6">
+          <div className="animate-fade-up" style={{ animationDelay: "0ms" }}>
+            <Badge
+              variant="outline"
+              className="gap-1.5 px-3 py-1.5 text-sm border-primary/30 text-primary backdrop-blur-sm"
+            >
+              <Shield className="h-3.5 w-3.5" />
+              {tc("privacyBadge")}
+            </Badge>
           </div>
-          <div className="flex flex-col items-center text-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-              <Cpu className="h-5 w-5 text-primary" />
-            </div>
-            <h3 className="text-sm font-semibold">{t("howItWorksStep2Title")}</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">{t("howItWorksStep2Desc")}</p>
-          </div>
-          <div className="flex flex-col items-center text-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-              <Eye className="h-5 w-5 text-primary" />
-            </div>
-            <h3 className="text-sm font-semibold">{t("howItWorksStep3Title")}</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">{t("howItWorksStep3Desc")}</p>
+
+          <h1
+            className="animate-fade-up font-display text-5xl sm:text-7xl lg:text-[5.5rem] font-extrabold tracking-tight max-w-4xl"
+            style={{ animationDelay: "80ms" }}
+          >
+            <span className="bg-gradient-to-br from-foreground via-foreground/90 to-foreground/50 bg-clip-text text-transparent">
+              {tc("brand")}
+            </span>
+          </h1>
+
+          <p
+            className="animate-fade-up text-lg sm:text-xl lg:text-2xl text-muted-foreground max-w-2xl leading-relaxed"
+            style={{ animationDelay: "160ms" }}
+          >
+            {t("hero")}
+          </p>
+
+          <p
+            className="animate-fade-up text-sm text-muted-foreground/60 max-w-xl"
+            style={{ animationDelay: "240ms" }}
+          >
+            {t("heroSub")}
+          </p>
+
+          {/* How it works — inline pills */}
+          <div
+            className="animate-fade-up flex flex-wrap gap-3 pt-4"
+            style={{ animationDelay: "320ms" }}
+          >
+            {[
+              { icon: MonitorSmartphone, key: "howItWorksStep1Title" as const },
+              { icon: Cpu, key: "howItWorksStep2Title" as const },
+              { icon: Eye, key: "howItWorksStep3Title" as const },
+            ].map((step) => {
+              const Icon = step.icon;
+              return (
+                <div
+                  key={step.key}
+                  className="flex items-center gap-2 rounded-full border border-border/60 bg-background/80 backdrop-blur-sm px-4 py-2 text-sm text-muted-foreground"
+                >
+                  <Icon className="h-3.5 w-3.5 text-primary" />
+                  {t(step.key)}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* ── Convert Section ─────────────────────────────────────────────────── */}
-      <section className="space-y-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <ArrowRightLeft className="h-5 w-5 text-category-convert" />
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-              {t("convertSection")}
-            </h2>
+      <section className="space-y-8">
+        <ScrollReveal>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-category-convert/10">
+                <ArrowRightLeft className="h-4 w-4 text-category-convert" />
+              </div>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
+                {t("convertSection")}
+              </h2>
+            </div>
+            <p className="text-muted-foreground max-w-2xl">
+              {t("convertSectionSub")}
+            </p>
           </div>
-          <p className="text-muted-foreground max-w-2xl">
-            {t("convertSectionSub")}
-          </p>
-        </div>
+        </ScrollReveal>
 
         {(["video", "audio", "image", "document"] as const).map((type) => {
           const group = conversionList.filter((c) => c.from.type === type);
           if (group.length === 0) return null;
-          const groupLabelKey = `convertGroup${type.charAt(0).toUpperCase() + type.slice(1)}` as "convertGroupVideo" | "convertGroupAudio" | "convertGroupImage" | "convertGroupDocument";
+          const groupLabelKey =
+            `convertGroup${type.charAt(0).toUpperCase() + type.slice(1)}` as
+              | "convertGroupVideo"
+              | "convertGroupAudio"
+              | "convertGroupImage"
+              | "convertGroupDocument";
           const GroupIcon = formatTypeIcon[type] ?? FileText;
 
           return (
             <div key={type} className="space-y-3">
-              <div className="flex items-center gap-2">
-                <GroupIcon className="h-4 w-4 text-category-convert" />
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t(groupLabelKey)}
-                </h3>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {group.map((conv) => {
+              <ScrollReveal>
+                <div className="flex items-center gap-2">
+                  <GroupIcon className="h-4 w-4 text-category-convert" />
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                    {t(groupLabelKey)}
+                  </h3>
+                </div>
+              </ScrollReveal>
+
+              <ScrollReveal
+                stagger
+                className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+              >
+                {group.map((conv, i) => {
                   const seo = conv.seo[loc] ?? conv.seo.en;
                   return (
-                    <Link key={conv.slug} href={`/convert/${conv.slug}`}>
-                      <Card className="group h-full transition-colors hover:border-category-convert/50">
+                    <Link
+                      key={conv.slug}
+                      href={`/convert/${conv.slug}`}
+                      style={{ "--i": i } as React.CSSProperties}
+                    >
+                      <Card className="group h-full transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-category-convert/40">
                         <CardHeader>
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-base">
+                            <CardTitle className="text-base font-display">
                               <HighlightFormats
                                 text={seo.h1}
                                 formats={[conv.from.format, conv.to.format]}
@@ -218,39 +265,50 @@ export default async function LandingPage({
                     </Link>
                   );
                 })}
-              </div>
+              </ScrollReveal>
             </div>
           );
         })}
       </section>
 
       {/* ── PDF Section ──────────────────────────────────────────────────────── */}
-      <section className="space-y-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-category-pdf" />
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-              {t("pdfSection")}
-            </h2>
+      <section className="relative rounded-2xl bg-category-pdf/[0.04] dark:bg-category-pdf/[0.03] p-6 sm:p-8 space-y-6">
+        <ScrollReveal>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-category-pdf/10">
+                <FileText className="h-4 w-4 text-category-pdf" />
+              </div>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
+                {t("pdfSection")}
+              </h2>
+            </div>
+            <p className="text-muted-foreground max-w-2xl">
+              {t("pdfSectionSub")}
+            </p>
           </div>
-          <p className="text-muted-foreground max-w-2xl">
-            {t("pdfSectionSub")}
-          </p>
-        </div>
+        </ScrollReveal>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {pdfToolList.map((tool) => {
+        <ScrollReveal
+          stagger
+          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {pdfToolList.map((tool, i) => {
             const seo = tool.seo[loc] ?? tool.seo.en;
             const ToolIcon = iconMap[tool.icon] ?? FileText;
 
             return (
-              <Link key={tool.id} href={`/pdf/${tool.id}`}>
-                <Card className="group h-full transition-colors hover:border-category-pdf/50">
+              <Link
+                key={tool.id}
+                href={`/pdf/${tool.id}`}
+                style={{ "--i": i } as React.CSSProperties}
+              >
+                <Card className="group h-full transition-all duration-200 bg-background/70 backdrop-blur-sm hover:shadow-md hover:-translate-y-0.5 hover:border-category-pdf/40">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <ToolIcon className="h-4 w-4 text-category-pdf" />
-                        <CardTitle className="text-base">
+                        <CardTitle className="text-base font-display">
                           {seo.h1}
                         </CardTitle>
                       </div>
@@ -264,36 +322,47 @@ export default async function LandingPage({
               </Link>
             );
           })}
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* ── Image Section ────────────────────────────────────────────────────── */}
-      <section className="space-y-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <FileImage className="h-5 w-5 text-category-image" />
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-              {t("imageSection")}
-            </h2>
+      <section className="relative rounded-2xl bg-category-image/[0.04] dark:bg-category-image/[0.03] p-6 sm:p-8 space-y-6">
+        <ScrollReveal>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-category-image/10">
+                <FileImage className="h-4 w-4 text-category-image" />
+              </div>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
+                {t("imageSection")}
+              </h2>
+            </div>
+            <p className="text-muted-foreground max-w-2xl">
+              {t("imageSectionSub")}
+            </p>
           </div>
-          <p className="text-muted-foreground max-w-2xl">
-            {t("imageSectionSub")}
-          </p>
-        </div>
+        </ScrollReveal>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {imageToolList.map((tool) => {
+        <ScrollReveal
+          stagger
+          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {imageToolList.map((tool, i) => {
             const seo = tool.seo[loc] ?? tool.seo.en;
             const ToolIcon = iconMap[tool.icon] ?? FileImage;
 
             return (
-              <Link key={tool.id} href={`/image/${tool.id}`}>
-                <Card className="group h-full transition-colors hover:border-category-image/50">
+              <Link
+                key={tool.id}
+                href={`/image/${tool.id}`}
+                style={{ "--i": i } as React.CSSProperties}
+              >
+                <Card className="group h-full transition-all duration-200 bg-background/70 backdrop-blur-sm hover:shadow-md hover:-translate-y-0.5 hover:border-category-image/40">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <ToolIcon className="h-4 w-4 text-category-image" />
-                        <CardTitle className="text-base">
+                        <CardTitle className="text-base font-display">
                           {seo.h1}
                         </CardTitle>
                       </div>
@@ -307,7 +376,7 @@ export default async function LandingPage({
               </Link>
             );
           })}
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* ── Bottom Spacer ────────────────────────────────────────────────────── */}

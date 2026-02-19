@@ -4,6 +4,21 @@ import { Link } from "@/i18n/navigation";
 import { getConversionsByType } from "@/config/conversions";
 import type { Locale } from "@/config/types";
 import type { Metadata } from "next";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import {
+  ArrowRight,
+  ArrowRightLeft,
+  FileVideo,
+  FileAudio,
+  FileImage,
+  FileText,
+} from "lucide-react";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -61,6 +76,45 @@ const typeLabels: Record<string, Record<Locale, string>> = {
   },
 };
 
+// ─── Highlight format names ─────────────────────────────────────────────────────
+
+function HighlightFormats({
+  text,
+  formats,
+  className,
+}: {
+  text: string;
+  formats: string[];
+  className: string;
+}) {
+  const pattern = formats
+    .map((f) => f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|");
+  const regex = new RegExp(`(${pattern})`, "gi");
+  const parts = text.split(regex);
+
+  return (
+    <>
+      {parts.map((part, i) =>
+        regex.test(part) ? (
+          <span key={i} className={className}>
+            {part}
+          </span>
+        ) : (
+          part
+        )
+      )}
+    </>
+  );
+}
+
+const formatTypeIcon: Record<string, React.ElementType> = {
+  video: FileVideo,
+  audio: FileAudio,
+  image: FileImage,
+  document: FileText,
+};
+
 export async function generateMetadata({
   params,
 }: {
@@ -86,33 +140,64 @@ export default async function ConvertHubPage({
   const types = ["video", "audio", "image", "document"] as const;
 
   return (
-    <div className="space-y-10">
-      <h1 className="text-3xl font-bold">{hubHeadings[loc] ?? hubHeadings.en}</h1>
+    <div className="space-y-12">
+      <div className="space-y-2">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-category-convert/10">
+            <ArrowRightLeft className="h-4 w-4 text-category-convert" />
+          </div>
+          <h1 className="font-display text-3xl font-bold tracking-tight">
+            {hubHeadings[loc] ?? hubHeadings.en}
+          </h1>
+        </div>
+      </div>
 
       {types.map((type) => {
         const items = getConversionsByType(type);
         if (items.length === 0) return null;
+        const GroupIcon = formatTypeIcon[type] ?? FileText;
+
         return (
-          <section key={type} className="space-y-3">
-            <h2 className="text-xl font-semibold">
-              {typeLabels[type]?.[loc] ?? typeLabels[type]?.en ?? type}
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((c) => (
+          <section key={type} className="space-y-4">
+            <ScrollReveal>
+              <div className="flex items-center gap-2">
+                <GroupIcon className="h-4 w-4 text-category-convert" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  {typeLabels[type]?.[loc] ?? typeLabels[type]?.en ?? type}
+                </h2>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal
+              stagger
+              className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+            >
+              {items.map((c, i) => (
                 <Link
                   key={c.slug}
                   href={`/convert/${c.slug}`}
-                  className="rounded-lg border p-4 hover:border-foreground transition-colors"
+                  style={{ "--i": i } as React.CSSProperties}
                 >
-                  <span className="font-medium">
-                    {c.seo[loc]?.h1 ?? c.seo.en.h1}
-                  </span>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {c.from.format.toUpperCase()} &rarr; {c.to.format.toUpperCase()}
-                  </p>
+                  <Card className="group h-full transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-category-convert/40">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base font-display">
+                          <HighlightFormats
+                            text={c.seo[loc]?.h1 ?? c.seo.en.h1}
+                            formats={[c.from.format, c.to.format]}
+                            className="text-category-convert font-bold"
+                          />
+                        </CardTitle>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
+                      </div>
+                      <CardDescription>
+                        {c.from.format.toUpperCase()} &rarr; {c.to.format.toUpperCase()}
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
                 </Link>
               ))}
-            </div>
+            </ScrollReveal>
           </section>
         );
       })}

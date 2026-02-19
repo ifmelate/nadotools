@@ -41,6 +41,7 @@
     "convertGroupDocument": "Document",
     "footerOpenSource": "Open source. Pas de suivi. Pas de publicité.",
     "footerSourceCode": "Code source",
+    "reportIssue": "Signaler un problème",
     "howItWorksTitle": "Comment ça marche sans téléchargement ?",
     "howItWorksStep1Title": "Vos fichiers restent sur votre appareil",
     "howItWorksStep1Desc": "Quand vous sélectionnez un fichier, il ne quitte jamais votre navigateur. Il n'y a pas de serveur — le traitement se fait ici même, sur votre ordinateur.",

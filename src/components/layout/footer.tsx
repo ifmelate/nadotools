@@ -1,7 +1,7 @@
 "use client";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Github } from "lucide-react";
+import { Github, CircleAlert } from "lucide-react";
 
 export function Footer() {
   const t = useTranslations("common");
@@ -46,6 +46,15 @@ export function Footer() {
               >
                 <Github className="h-3.5 w-3.5" />
                 GitHub
+              </a>
+              <a
+                href="#" // TODO: replace with real GitHub repo URL + /issues/new
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <CircleAlert className="h-3.5 w-3.5" />
+                {tl("reportIssue")}
               </a>
             </nav>
           </div>

@@ -41,6 +41,7 @@
     "convertGroupDocument": "文档",
     "footerOpenSource": "开源。无追踪。无广告。",
     "footerSourceCode": "源代码",
+    "reportIssue": "报告问题",
     "howItWorksTitle": "不上传文件是怎么做到的？",
     "howItWorksStep1Title": "文件留在您的设备上",
     "howItWorksStep1Desc": "当您选择文件时，它不会离开您的浏览器。没有服务器——处理就在您的电脑上完成。",

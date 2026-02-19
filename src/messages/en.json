@@ -41,6 +41,7 @@
     "convertGroupDocument": "Document",
     "footerOpenSource": "Open-source. No tracking. No ads.",
     "footerSourceCode": "Source Code",
+    "reportIssue": "Report an Issue",
     "howItWorksTitle": "How does it work without uploading?",
     "howItWorksStep1Title": "Your files stay on your device",
     "howItWorksStep1Desc": "When you drop a file, it never leaves your browser. There is no server — processing happens right here, on your computer.",

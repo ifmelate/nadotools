@@ -41,6 +41,7 @@
     "convertGroupDocument": "Documento",
     "footerOpenSource": "Código abierto. Sin rastreo. Sin anuncios.",
     "footerSourceCode": "Código fuente",
+    "reportIssue": "Reportar un problema",
     "howItWorksTitle": "¿Cómo funciona sin subir archivos?",
     "howItWorksStep1Title": "Tus archivos se quedan en tu dispositivo",
     "howItWorksStep1Desc": "Cuando seleccionas un archivo, nunca sale de tu navegador. No hay servidor — el procesamiento ocurre aquí mismo, en tu computadora.",

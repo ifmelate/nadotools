@@ -41,6 +41,7 @@
     "convertGroupDocument": "ドキュメント",
     "footerOpenSource": "オープンソース。トラッキングなし。広告なし。",
     "footerSourceCode": "ソースコード",
+    "reportIssue": "問題を報告",
     "howItWorksTitle": "アップロードなしでどう動くの？",
     "howItWorksStep1Title": "ファイルはデバイスに残ります",
     "howItWorksStep1Desc": "ファイルを選択しても、ブラウザの外に出ることはありません。サーバーはなく、処理はあなたのパソコン上で行われます。",
