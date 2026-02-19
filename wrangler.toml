@@ -1,0 +1,5 @@
+name = "nado-app"
+compatibility_date = "2026-02-18"
+
+[site]
+bucket = "./out"
