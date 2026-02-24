@@ -44,7 +44,9 @@ function FfmpegConverterTool({ config }: ConverterToolProps) {
         if (cancelled) return;
 
         const ffmpeg = new FFmpeg();
-        const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd";
+        const useMultiThread = typeof SharedArrayBuffer !== "undefined";
+        const pkg = useMultiThread ? "core-mt" : "core";
+        const baseURL = `https://unpkg.com/@ffmpeg/${pkg}@0.12.10/dist/umd`;
 
         await ffmpeg.load({
           coreURL: await toBlobURL(
@@ -55,6 +57,12 @@ function FfmpegConverterTool({ config }: ConverterToolProps) {
             `${baseURL}/ffmpeg-core.wasm`,
             "application/wasm"
           ),
+          ...(useMultiThread && {
+            workerURL: await toBlobURL(
+              `${baseURL}/ffmpeg-core.worker.js`,
+              "text/javascript"
+            ),
+          }),
         });
 
         if (cancelled) {
