@@ -4,6 +4,8 @@ import { getAllPdfToolIds } from "@/config/pdf-tools";
 import { getAllImageToolIds } from "@/config/image-tools";
 import { BASE_URL, LOCALES } from "@/lib/seo";
 
+export const dynamic = "force-static";
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const urls: MetadataRoute.Sitemap = [];
   const now = new Date();
