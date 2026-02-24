@@ -31,7 +31,7 @@ function FfmpegConverterTool({ config }: ConverterToolProps) {
     if (config.engine !== "ffmpeg") return;
 
     const worker = new Worker(
-      new URL("@/workers/ffmpeg.worker.ts", import.meta.url),
+      new URL("../../workers/ffmpeg.worker.ts", import.meta.url),
       { type: "module" }
     );
 
