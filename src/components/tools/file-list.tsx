@@ -3,6 +3,12 @@
 import { X, Download, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 import type { FileEntry } from "@/hooks/use-progress";
 
 interface FileListProps {
@@ -48,7 +54,16 @@ export function FileList({ files, onRemove, onDownload }: FileListProps) {
           )}
 
           {file.status === "error" && (
-            <AlertCircle className="h-4 w-4 text-destructive" />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  {file.error || "Conversion failed"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
 
           <Button size="sm" variant="ghost" onClick={() => onRemove(file.id)}>
