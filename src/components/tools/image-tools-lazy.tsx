@@ -1,13 +1,14 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { ToolSkeleton } from "./tool-skeleton";
 
 const ImageRemoveBgTool = dynamic(
   () =>
     import("./image-remove-bg-tool").then((m) => ({
       default: m.ImageRemoveBgTool,
     })),
-  { ssr: false }
+  { ssr: false, loading: () => <ToolSkeleton /> }
 );
 
 const ImageResizeTool = dynamic(
@@ -15,7 +16,7 @@ const ImageResizeTool = dynamic(
     import("./image-resize-tool").then((m) => ({
       default: m.ImageResizeTool,
     })),
-  { ssr: false }
+  { ssr: false, loading: () => <ToolSkeleton /> }
 );
 
 const ImageCompressTool = dynamic(
@@ -23,7 +24,7 @@ const ImageCompressTool = dynamic(
     import("./image-compress-tool").then((m) => ({
       default: m.ImageCompressTool,
     })),
-  { ssr: false }
+  { ssr: false, loading: () => <ToolSkeleton /> }
 );
 
 const ImageStripMetadataTool = dynamic(
@@ -31,7 +32,7 @@ const ImageStripMetadataTool = dynamic(
     import("./image-strip-metadata-tool").then((m) => ({
       default: m.ImageStripMetadataTool,
     })),
-  { ssr: false }
+  { ssr: false, loading: () => <ToolSkeleton /> }
 );
 
 const toolMap: Record<string, React.ComponentType> = {

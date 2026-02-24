@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { ToolSkeleton } from "./tool-skeleton";
 import type { ConversionConfig } from "@/config/types";
 
 const ConverterTool = dynamic(
@@ -8,7 +9,7 @@ const ConverterTool = dynamic(
     import("./converter-tool").then((m) => ({
       default: m.ConverterTool,
     })),
-  { ssr: false }
+  { ssr: false, loading: () => <ToolSkeleton /> }
 );
 
 interface ConverterToolLazyProps {
