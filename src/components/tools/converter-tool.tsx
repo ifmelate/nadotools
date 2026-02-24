@@ -23,55 +23,64 @@ export function ConverterTool({ config }: ConverterToolProps) {
 
 function FfmpegConverterTool({ config }: ConverterToolProps) {
   const { files, addFiles, updateFile, removeFile } = useProgress();
-  const workerRef = useRef<Worker | null>(null);
-  const isReadyRef = useRef(false);
+  const ffmpegRef = useRef<import("@ffmpeg/ffmpeg").FFmpeg | null>(null);
+  const loadingRef = useRef(false);
+  const [isReady, setIsReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (config.engine !== "ffmpeg") return;
 
-    const worker = new Worker(
-      new URL("../../workers/ffmpeg.worker.ts", import.meta.url),
-      { type: "module" }
-    );
+    let cancelled = false;
 
-    worker.onmessage = (e) => {
-      const msg = e.data;
-      switch (msg.type) {
-        case "ready":
-          isReadyRef.current = true;
-          setLoadError(null);
-          break;
-        case "load-error":
-          setLoadError(msg.error);
-          break;
-        case "progress":
-          updateFile(msg.fileId, {
-            progress: msg.progress,
-            status: "processing",
-          });
-          break;
-        case "done":
-          updateFile(msg.fileId, {
-            status: "done",
-            progress: 100,
-            outputBlob: new Blob([msg.output]),
-            outputName: msg.outputName,
-          });
-          break;
-        case "error":
-          updateFile(msg.fileId, { status: "error", error: msg.error });
-          break;
+    async function init() {
+      if (loadingRef.current || ffmpegRef.current) return;
+      loadingRef.current = true;
+
+      try {
+        const { FFmpeg } = await import("@ffmpeg/ffmpeg");
+        const { toBlobURL } = await import("@ffmpeg/util");
+
+        if (cancelled) return;
+
+        const ffmpeg = new FFmpeg();
+        const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd";
+
+        await ffmpeg.load({
+          coreURL: await toBlobURL(
+            `${baseURL}/ffmpeg-core.js`,
+            "text/javascript"
+          ),
+          wasmURL: await toBlobURL(
+            `${baseURL}/ffmpeg-core.wasm`,
+            "application/wasm"
+          ),
+        });
+
+        if (cancelled) {
+          ffmpeg.terminate();
+          return;
+        }
+
+        ffmpegRef.current = ffmpeg;
+        setIsReady(true);
+      } catch (err) {
+        if (!cancelled) {
+          setLoadError(String(err));
+        }
+      } finally {
+        loadingRef.current = false;
       }
-    };
+    }
 
-    worker.postMessage({ type: "init" });
-    workerRef.current = worker;
+    init();
 
     return () => {
-      worker.terminate();
+      cancelled = true;
+      ffmpegRef.current?.terminate();
+      ffmpegRef.current = null;
     };
-  }, [config.engine, updateFile]);
+  }, [config.engine]);
 
   const handleFiles = useCallback(
     (inputFiles: File[]) => {
@@ -88,20 +97,58 @@ function FfmpegConverterTool({ config }: ConverterToolProps) {
       entries.forEach((entry, i) => {
         const file = inputFiles[i];
         const reader = new FileReader();
-        reader.onload = () => {
-          workerRef.current?.postMessage({
-            type: "convert",
-            fileId: entry.id,
-            inputData: reader.result,
-            inputName: file.name,
-            outputFormat: config.to.format,
-            outputExt: config.to.extension,
-          });
+        reader.onload = async () => {
+          const ffmpeg = ffmpegRef.current;
+          if (!ffmpeg) {
+            updateFile(entry.id, {
+              status: "error",
+              error: "Converter engine not loaded",
+            });
+            return;
+          }
+
+          try {
+            updateFile(entry.id, { status: "processing", progress: 0 });
+
+            const onProgress = ({ progress }: { progress: number }) => {
+              updateFile(entry.id, {
+                progress: Math.round(progress * 100),
+              });
+            };
+            ffmpeg.on("progress", onProgress);
+
+            const outputName = file.name.replace(
+              /\.[^.]+$/,
+              config.to.extension
+            );
+            await ffmpeg.writeFile(
+              file.name,
+              new Uint8Array(reader.result as ArrayBuffer)
+            );
+            await ffmpeg.exec(["-i", file.name, outputName]);
+            const data = (await ffmpeg.readFile(outputName)) as Uint8Array;
+
+            await ffmpeg.deleteFile(file.name);
+            await ffmpeg.deleteFile(outputName);
+            ffmpeg.off("progress", onProgress);
+
+            updateFile(entry.id, {
+              status: "done",
+              progress: 100,
+              outputBlob: new Blob([new Uint8Array(data) as BlobPart]),
+              outputName,
+            });
+          } catch (err) {
+            updateFile(entry.id, {
+              status: "error",
+              error: String(err),
+            });
+          }
         };
         reader.readAsArrayBuffer(file);
       });
     },
-    [addFiles, config]
+    [addFiles, config, updateFile]
   );
 
   return (
@@ -116,6 +163,11 @@ function FfmpegConverterTool({ config }: ConverterToolProps) {
           </p>
           <p className="text-xs text-muted-foreground break-all">{loadError}</p>
         </div>
+      )}
+      {!isReady && !loadError && (
+        <p className="text-sm text-muted-foreground text-center">
+          Loading converter engine…
+        </p>
       )}
       <FileDropzone accept={[config.from.mime]} onFiles={handleFiles} />
       <FileList files={files} onRemove={removeFile} onDownload={downloadFile} />
