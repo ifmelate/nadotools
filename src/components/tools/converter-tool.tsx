@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import { FileDropzone } from "./file-dropzone";
 import { FileList } from "./file-list";
 import { DownloadAllButton, downloadFile } from "./download-button";
@@ -25,6 +25,7 @@ function FfmpegConverterTool({ config }: ConverterToolProps) {
   const { files, addFiles, updateFile, removeFile } = useProgress();
   const workerRef = useRef<Worker | null>(null);
   const isReadyRef = useRef(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (config.engine !== "ffmpeg") return;
@@ -39,6 +40,10 @@ function FfmpegConverterTool({ config }: ConverterToolProps) {
       switch (msg.type) {
         case "ready":
           isReadyRef.current = true;
+          setLoadError(null);
+          break;
+        case "load-error":
+          setLoadError(msg.error);
           break;
         case "progress":
           updateFile(msg.fileId, {
@@ -104,6 +109,11 @@ function FfmpegConverterTool({ config }: ConverterToolProps) {
       <div className="flex justify-center">
         <PrivacyBadge />
       </div>
+      {loadError && (
+        <p className="text-sm text-destructive">
+          Failed to load converter engine. Please refresh and try again.
+        </p>
+      )}
       <FileDropzone accept={[config.from.mime]} onFiles={handleFiles} />
       <FileList files={files} onRemove={removeFile} onDownload={downloadFile} />
       <div className="flex justify-center">

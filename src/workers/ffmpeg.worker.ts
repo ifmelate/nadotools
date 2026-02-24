@@ -7,10 +7,10 @@ let currentFileId = "";
 async function loadFFmpeg() {
   if (ffmpeg) return ffmpeg;
 
-  ffmpeg = new FFmpeg();
+  const instance = new FFmpeg();
   const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm";
 
-  ffmpeg.on("progress", ({ progress }) => {
+  instance.on("progress", ({ progress }) => {
     self.postMessage({
       type: "progress",
       fileId: currentFileId,
@@ -20,7 +20,7 @@ async function loadFFmpeg() {
 
   self.postMessage({ type: "loading", progress: 0 });
 
-  await ffmpeg.load({
+  await instance.load({
     coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
     wasmURL: await toBlobURL(
       `${baseURL}/ffmpeg-core.wasm`,
@@ -28,6 +28,7 @@ async function loadFFmpeg() {
     ),
   });
 
+  ffmpeg = instance;
   self.postMessage({ type: "ready" });
   return ffmpeg;
 }
@@ -40,7 +41,7 @@ self.onmessage = async (e: MessageEvent) => {
     try {
       await loadFFmpeg();
     } catch (err) {
-      self.postMessage({ type: "error", fileId: "", error: String(err) });
+      self.postMessage({ type: "load-error", error: String(err) });
     }
     return;
   }
