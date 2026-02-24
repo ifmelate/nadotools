@@ -285,6 +285,7 @@ export const conversions: Record<string, ConversionConfig> = {
     from: formats.mkv,
     to: formats.mp4,
     engine: "ffmpeg",
+    tryRemux: true,
     seo: {
       en: {
         title: "Convert MKV to MP4 — Free, Online | NadoTools",
@@ -366,6 +367,7 @@ export const conversions: Record<string, ConversionConfig> = {
     from: formats.mov,
     to: formats.mp4,
     engine: "ffmpeg",
+    tryRemux: true,
     seo: {
       en: {
         title: "Convert MOV to MP4 — Free, Online | NadoTools",

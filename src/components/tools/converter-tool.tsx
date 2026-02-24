@@ -133,7 +133,29 @@ function FfmpegConverterTool({ config }: ConverterToolProps) {
               file.name,
               new Uint8Array(reader.result as ArrayBuffer)
             );
-            await ffmpeg.exec(["-i", file.name, outputName]);
+
+            let success = false;
+
+            // Try remux first (nearly instant — just copies streams)
+            if (config.tryRemux) {
+              try {
+                await ffmpeg.exec([
+                  "-i", file.name, "-c", "copy",
+                  "-movflags", "+faststart", outputName,
+                ]);
+                success = true;
+              } catch {
+                // Remux failed (incompatible codecs), fall through to re-encode
+                try { await ffmpeg.deleteFile(outputName); } catch { /* ignore */ }
+              }
+            }
+
+            // Re-encode if remux wasn't attempted or failed
+            if (!success) {
+              const extraArgs = config.ffmpegArgs ?? ["-preset", "ultrafast"];
+              await ffmpeg.exec(["-i", file.name, ...extraArgs, outputName]);
+            }
+
             const data = (await ffmpeg.readFile(outputName)) as Uint8Array;
 
             await ffmpeg.deleteFile(file.name);

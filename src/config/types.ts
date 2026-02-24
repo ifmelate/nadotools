@@ -20,6 +20,10 @@ export interface ConversionConfig {
   from: FormatInfo;
   to: FormatInfo;
   engine: "ffmpeg" | "canvas" | "pdf" | "pandoc";
+  /** Extra args inserted between -i input and output. Defaults to ["-preset", "ultrafast"]. */
+  ffmpegArgs?: string[];
+  /** If true, try -c copy (remux) first, fall back to re-encode on failure. */
+  tryRemux?: boolean;
   seo: Record<Locale, SeoData>;
 }
 
