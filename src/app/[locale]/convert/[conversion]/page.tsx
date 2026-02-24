@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { buildAlternates } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { getAllConversionSlugs, getConversion } from "@/config/conversions";
@@ -29,9 +30,14 @@ export async function generateMetadata({
     title: seo.title,
     description: seo.description,
     openGraph: {
+      type: "website" as const,
       title: seo.title,
       description: seo.description,
+      url: `https://nadotools.com/${locale}/convert/${conversion}/`,
+      images: [{ url: "/opengraph-image.png", width: 1200, height: 630 }],
     },
+    twitter: { title: seo.title, description: seo.description, images: ["/opengraph-image.png"] },
+    alternates: buildAlternates(locale, `convert/${conversion}/`),
   };
 }
 

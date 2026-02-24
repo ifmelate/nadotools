@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { buildAlternates } from "@/lib/seo";
 import { routing } from "@/i18n/routing";
 import { Link } from "@/i18n/navigation";
 import { pdfTools } from "@/config/pdf-tools";
@@ -74,9 +75,20 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const loc = locale as Locale;
+  const title = hubTitles[loc] ?? hubTitles.en;
+  const description = hubDescriptions[loc] ?? hubDescriptions.en;
   return {
-    title: hubTitles[loc] ?? hubTitles.en,
-    description: hubDescriptions[loc] ?? hubDescriptions.en,
+    title,
+    description,
+    openGraph: {
+      type: "website" as const,
+      title,
+      description,
+      url: `https://nadotools.com/${locale}/pdf/`,
+      images: [{ url: "/opengraph-image.png", width: 1200, height: 630 }],
+    },
+    twitter: { title, description, images: ["/opengraph-image.png"] },
+    alternates: buildAlternates(locale, "pdf/"),
   };
 }
 

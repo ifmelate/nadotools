@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { buildAlternates } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import { conversions } from "@/config/conversions";
 import { pdfTools } from "@/config/pdf-tools";
@@ -96,6 +97,19 @@ export async function generateMetadata({
   return {
     title: t("title"),
     description: t("description"),
+    openGraph: {
+      type: "website" as const,
+      title: t("title"),
+      description: t("description"),
+      url: `https://nadotools.com/${locale}/`,
+      images: [{ url: "/opengraph-image.png", width: 1200, height: 630 }],
+    },
+    twitter: {
+      title: t("title"),
+      description: t("description"),
+      images: ["/opengraph-image.png"],
+    },
+    alternates: buildAlternates(locale, ""),
   };
 }
 

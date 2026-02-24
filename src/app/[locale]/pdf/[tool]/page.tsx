@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { buildAlternates } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { getAllPdfToolIds, getPdfTool } from "@/config/pdf-tools";
@@ -29,9 +30,14 @@ export async function generateMetadata({
     title: seo.title,
     description: seo.description,
     openGraph: {
+      type: "website" as const,
       title: seo.title,
       description: seo.description,
+      url: `https://nadotools.com/${locale}/pdf/${tool}/`,
+      images: [{ url: "/opengraph-image.png", width: 1200, height: 630 }],
     },
+    twitter: { title: seo.title, description: seo.description, images: ["/opengraph-image.png"] },
+    alternates: buildAlternates(locale, `pdf/${tool}/`),
   };
 }
 
