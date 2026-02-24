@@ -4,6 +4,8 @@
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: credentialless
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://static.cloudflareinsights.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self' https://unpkg.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://cloudflareinsights.com https://staticimgly.com blob:; font-src 'self'; object-src 'none'; base-uri 'self'
 
 /wasm/*
