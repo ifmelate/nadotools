@@ -110,9 +110,12 @@ function FfmpegConverterTool({ config }: ConverterToolProps) {
         <PrivacyBadge />
       </div>
       {loadError && (
-        <p className="text-sm text-destructive">
-          Failed to load converter engine. Please refresh and try again.
-        </p>
+        <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-3 space-y-1">
+          <p className="text-sm font-medium text-destructive">
+            Failed to load converter engine
+          </p>
+          <p className="text-xs text-muted-foreground break-all">{loadError}</p>
+        </div>
       )}
       <FileDropzone accept={[config.from.mime]} onFiles={handleFiles} />
       <FileList files={files} onRemove={removeFile} onDownload={downloadFile} />
