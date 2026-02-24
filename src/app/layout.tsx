@@ -44,11 +44,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* eslint-disable-next-line @next/next/no-sync-scripts -- COI service worker must load synchronously before other JS to enable SharedArrayBuffer */}
         <script src="/coi-serviceworker.js" />
         <script
-          defer
-          src="https://static.cloudflareinsights.com/beacon.min.js"
-          data-cf-beacon='{"token": "YOUR_CF_ANALYTICS_TOKEN"}'
-        />
-        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
