@@ -17,6 +17,24 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://nadotools.com"),
   title: "NadoTools — Free Online File Tools",
   description: "Convert files, edit PDFs, process images — free, private, in your browser.",
+  twitter: {
+    card: "summary_large_image",
+  },
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "NadoTools",
+  url: "https://nadotools.com",
+};
+
+const orgSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "NadoTools",
+  url: "https://nadotools.com",
+  logo: "https://nadotools.com/icon.svg",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -29,6 +47,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           defer
           src="https://static.cloudflareinsights.com/beacon.min.js"
           data-cf-beacon='{"token": "YOUR_CF_ANALYTICS_TOKEN"}'
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
         />
       </head>
       <body className={`${sora.variable} ${dmSans.variable} antialiased`}>
