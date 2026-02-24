@@ -1,6 +1,6 @@
 # NadoTools
 
-Free online file tools. Convert files, edit PDFs, process images — all in your browser. No upload, no sign-up, no tracking.
+Free online file tools. Convert files, edit PDFs, process images — all in your browser. No upload, no sign-up, no cookies. Privacy-first analytics only.
 
 ## Tools
 

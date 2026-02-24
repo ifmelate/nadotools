@@ -14,6 +14,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://nadotools.com"),
   title: "NadoTools — Free Online File Tools",
   description: "Convert files, edit PDFs, process images — free, private, in your browser.",
 };
@@ -24,6 +25,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* eslint-disable-next-line @next/next/no-sync-scripts -- COI service worker must load synchronously before other JS to enable SharedArrayBuffer */}
         <script src="/coi-serviceworker.js" />
+        <script
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "YOUR_CF_ANALYTICS_TOKEN"}'
+        />
       </head>
       <body className={`${sora.variable} ${dmSans.variable} antialiased`}>
         <ThemeProvider>

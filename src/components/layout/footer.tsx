@@ -39,7 +39,7 @@ export function Footer() {
             <p className="text-sm font-semibold">{tl("footerSourceCode")}</p>
             <nav className="flex flex-col gap-1 text-sm text-muted-foreground">
               <a
-                href="#" // TODO: replace with real GitHub repo URL
+                href="https://github.com/ifmelate/nadotools"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
@@ -48,7 +48,7 @@ export function Footer() {
                 GitHub
               </a>
               <a
-                href="#" // TODO: replace with real GitHub repo URL + /issues/new
+                href="https://github.com/ifmelate/nadotools/issues/new/choose"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
