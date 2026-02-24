@@ -3,8 +3,9 @@
 import { useCallback, useRef, useState } from "react";
 import { FileDropzone } from "./file-dropzone";
 import { PrivacyBadge } from "./privacy-badge";
+import { CropOverlay, CropRect } from "./crop-overlay";
 import { Button } from "@/components/ui/button";
-import { Download, Lock, Unlock } from "lucide-react";
+import { Download, ImagePlus, Lock, RotateCcw, Unlock } from "lucide-react";
 
 interface Preset {
   label: string;
@@ -25,10 +26,19 @@ export function ImageResizeTool() {
   const [originalName, setOriginalName] = useState("");
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
+  const [cropRect, setCropRect] = useState<CropRect>({
+    x: 0,
+    y: 0,
+    w: 0,
+    h: 0,
+  });
   const [aspectLocked, setAspectLocked] = useState(true);
+  const [aspectRatioVal, setAspectRatioVal] = useState(1);
   const [result, setResult] = useState<Blob | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const aspectRatio = useRef(1);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Track whether crop was just changed by input fields to avoid circular updates
+  const inputDriven = useRef(false);
 
   const handleFiles = useCallback((files: File[]) => {
     const file = files[0];
@@ -39,38 +49,140 @@ export function ImageResizeTool() {
       setOriginalImage(img);
       setWidth(img.naturalWidth);
       setHeight(img.naturalHeight);
-      aspectRatio.current = img.naturalWidth / img.naturalHeight;
+      setCropRect({
+        x: 0,
+        y: 0,
+        w: img.naturalWidth,
+        h: img.naturalHeight,
+      });
+      setAspectRatioVal(img.naturalWidth / img.naturalHeight);
     };
     img.src = URL.createObjectURL(file);
+  }, []);
+
+  // When crop rect changes from dragging, sync width/height
+  const handleCropChange = useCallback((rect: CropRect) => {
+    if (inputDriven.current) return;
+    setCropRect(rect);
+    setWidth(Math.round(rect.w));
+    setHeight(Math.round(rect.h));
   }, []);
 
   const handleWidthChange = useCallback(
     (val: string) => {
       const w = Math.max(1, parseInt(val) || 1);
       setWidth(w);
+      let h: number;
       if (aspectLocked) {
-        setHeight(Math.round(w / aspectRatio.current));
+        h = Math.round(w / aspectRatioVal);
+        setHeight(h);
+      } else {
+        h = height;
+      }
+      // Update crop rect size, centered on current center
+      if (originalImage) {
+        inputDriven.current = true;
+        const newW = Math.min(w, originalImage.naturalWidth);
+        const newH = Math.min(
+          aspectLocked ? h : height,
+          originalImage.naturalHeight
+        );
+        const cx = cropRect.x + cropRect.w / 2;
+        const cy = cropRect.y + cropRect.h / 2;
+        const newX = Math.max(
+          0,
+          Math.min(cx - newW / 2, originalImage.naturalWidth - newW)
+        );
+        const newY = Math.max(
+          0,
+          Math.min(cy - newH / 2, originalImage.naturalHeight - newH)
+        );
+        setCropRect({ x: newX, y: newY, w: newW, h: newH });
+        requestAnimationFrame(() => {
+          inputDriven.current = false;
+        });
       }
     },
-    [aspectLocked]
+    [aspectLocked, aspectRatioVal, height, originalImage, cropRect]
   );
 
   const handleHeightChange = useCallback(
     (val: string) => {
       const h = Math.max(1, parseInt(val) || 1);
       setHeight(h);
+      let w: number;
       if (aspectLocked) {
-        setWidth(Math.round(h * aspectRatio.current));
+        w = Math.round(h * aspectRatioVal);
+        setWidth(w);
+      } else {
+        w = width;
+      }
+      // Update crop rect size, centered on current center
+      if (originalImage) {
+        inputDriven.current = true;
+        const newW = Math.min(
+          aspectLocked ? w : width,
+          originalImage.naturalWidth
+        );
+        const newH = Math.min(h, originalImage.naturalHeight);
+        const cx = cropRect.x + cropRect.w / 2;
+        const cy = cropRect.y + cropRect.h / 2;
+        const newX = Math.max(
+          0,
+          Math.min(cx - newW / 2, originalImage.naturalWidth - newW)
+        );
+        const newY = Math.max(
+          0,
+          Math.min(cy - newH / 2, originalImage.naturalHeight - newH)
+        );
+        setCropRect({ x: newX, y: newY, w: newW, h: newH });
+        requestAnimationFrame(() => {
+          inputDriven.current = false;
+        });
       }
     },
-    [aspectLocked]
+    [aspectLocked, aspectRatioVal, width, originalImage, cropRect]
   );
 
-  const applyPreset = useCallback((preset: Preset) => {
-    setWidth(preset.width);
-    setHeight(preset.height);
-    setAspectLocked(false);
-  }, []);
+  const applyPreset = useCallback(
+    (preset: Preset) => {
+      setWidth(preset.width);
+      setHeight(preset.height);
+      setAspectLocked(false);
+      // Fit crop rect with preset aspect ratio, centered, maximum fit within image
+      if (originalImage) {
+        const presetAspect = preset.width / preset.height;
+        const imgW = originalImage.naturalWidth;
+        const imgH = originalImage.naturalHeight;
+        let cropW: number, cropH: number;
+        if (presetAspect > imgW / imgH) {
+          cropW = imgW;
+          cropH = imgW / presetAspect;
+        } else {
+          cropH = imgH;
+          cropW = imgH * presetAspect;
+        }
+        setCropRect({
+          x: (imgW - cropW) / 2,
+          y: (imgH - cropH) / 2,
+          w: cropW,
+          h: cropH,
+        });
+      }
+    },
+    [originalImage]
+  );
+
+  const resetCrop = useCallback(() => {
+    if (!originalImage) return;
+    const w = originalImage.naturalWidth;
+    const h = originalImage.naturalHeight;
+    setCropRect({ x: 0, y: 0, w, h });
+    setWidth(w);
+    setHeight(h);
+    setAspectLocked(true);
+    setAspectRatioVal(w / h);
+  }, [originalImage]);
 
   const handleResize = useCallback(() => {
     if (!originalImage) return;
@@ -79,7 +191,18 @@ export function ImageResizeTool() {
     canvas.height = height;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.drawImage(originalImage, 0, 0, width, height);
+    // Crop from source rect, draw to full canvas (resize)
+    ctx.drawImage(
+      originalImage,
+      cropRect.x,
+      cropRect.y,
+      cropRect.w,
+      cropRect.h,
+      0,
+      0,
+      width,
+      height
+    );
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
@@ -90,7 +213,7 @@ export function ImageResizeTool() {
       "image/png",
       1.0
     );
-  }, [originalImage, width, height, preview]);
+  }, [originalImage, width, height, cropRect, preview]);
 
   const handleDownload = useCallback(() => {
     if (!result) return;
@@ -108,10 +231,21 @@ export function ImageResizeTool() {
     setOriginalName("");
     setWidth(0);
     setHeight(0);
+    setCropRect({ x: 0, y: 0, w: 0, h: 0 });
     setResult(null);
     setPreview(null);
     setAspectLocked(true);
   }, [preview]);
+
+  // Update aspect ratio when lock is toggled on
+  const handleToggleAspectLock = useCallback(() => {
+    setAspectLocked((prev) => {
+      if (!prev && width > 0 && height > 0) {
+        setAspectRatioVal(width / height);
+      }
+      return !prev;
+    });
+  }, [width, height]);
 
   return (
     <div className="space-y-4">
@@ -127,6 +261,57 @@ export function ImageResizeTool() {
       )}
       {originalImage && !result && (
         <div className="space-y-4">
+          {/* Image preview with crop overlay */}
+          <div className="relative overflow-hidden rounded-lg border bg-muted/30">
+            <div className="relative mx-auto" style={{ maxHeight: 400 }}>
+              <img
+                src={originalImage.src}
+                alt="Original"
+                className="mx-auto block max-h-[400px] select-none object-contain"
+                draggable={false}
+              />
+              <CropOverlay
+                imageWidth={originalImage.naturalWidth}
+                imageHeight={originalImage.naturalHeight}
+                cropRect={cropRect}
+                onCropChange={handleCropChange}
+                aspectLocked={aspectLocked}
+                aspectRatio={aspectRatioVal}
+              />
+            </div>
+            <div className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
+              {originalImage.naturalWidth} x {originalImage.naturalHeight}
+            </div>
+            <div className="absolute bottom-2 right-2 flex gap-1.5">
+              <button
+                onClick={resetCrop}
+                className="flex items-center gap-1.5 rounded bg-black/60 px-2 py-1 text-xs text-white transition-colors hover:bg-black/80"
+                title="Reset crop to full image"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Reset Crop
+              </button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1.5 rounded bg-black/60 px-2 py-1 text-xs text-white transition-colors hover:bg-black/80"
+              >
+                <ImagePlus className="h-3.5 w-3.5" />
+                Change Image
+              </button>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const files = e.target.files;
+                if (files?.length) handleFiles(Array.from(files));
+                e.target.value = "";
+              }}
+            />
+          </div>
+
           {/* Presets */}
           <div className="flex flex-wrap gap-2">
             {PRESETS.map((p) => (
@@ -154,7 +339,7 @@ export function ImageResizeTool() {
               />
             </div>
             <button
-              onClick={() => setAspectLocked((v) => !v)}
+              onClick={handleToggleAspectLock}
               className="mt-5 rounded p-1 text-muted-foreground hover:text-foreground"
               title={aspectLocked ? "Unlock aspect ratio" : "Lock aspect ratio"}
             >
@@ -177,7 +362,7 @@ export function ImageResizeTool() {
             <span className="mt-5 text-xs text-muted-foreground">px</span>
           </div>
 
-          <Button onClick={handleResize}>Resize Image</Button>
+          <Button onClick={handleResize}>Resize & Crop</Button>
         </div>
       )}
       {preview && (
