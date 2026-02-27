@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import { PDFDocument } from "pdf-lib";
 import { FileDropzone } from "./file-dropzone";
 import { PrivacyBadge } from "./privacy-badge";
 import { Button } from "@/components/ui/button";
 import { Download, GripVertical, X } from "lucide-react";
+import { triggerDownload } from "@/lib/utils";
 
 interface PdfFile {
   id: string;
@@ -14,6 +16,7 @@ interface PdfFile {
 }
 
 export function PdfMergeTool() {
+  const t = useTranslations("common");
   const [pdfFiles, setPdfFiles] = useState<PdfFile[]>([]);
   const [merging, setMerging] = useState(false);
   const [result, setResult] = useState<Blob | null>(null);
@@ -47,7 +50,7 @@ export function PdfMergeTool() {
         pages.forEach((page) => merged.addPage(page));
       }
       const bytes = await merged.save();
-      setResult(new Blob([bytes as BlobPart], { type: "application/pdf" }));
+      setResult(new Blob([new Uint8Array(bytes)], { type: "application/pdf" }));
     } finally {
       setMerging(false);
     }
@@ -70,12 +73,7 @@ export function PdfMergeTool() {
 
   const handleDownload = useCallback(() => {
     if (!result) return;
-    const url = URL.createObjectURL(result);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "merged.pdf";
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(result, "merged.pdf");
   }, [result]);
 
   return (
@@ -95,7 +93,7 @@ export function PdfMergeTool() {
                 type="button"
                 className="cursor-grab text-muted-foreground hover:text-foreground"
                 onClick={() => handleMoveUp(i)}
-                aria-label="Move up"
+                aria-label={t("moveUp")}
               >
                 <GripVertical className="h-4 w-4" />
               </button>
@@ -113,13 +111,13 @@ export function PdfMergeTool() {
             onClick={handleMerge}
             disabled={pdfFiles.length < 2 || merging}
           >
-            {merging ? "Merging..." : `Merge ${pdfFiles.length} PDFs`}
+            {merging ? t("merging") : t("mergePdfs", { count: pdfFiles.length })}
           </Button>
         </div>
       )}
       {result && (
         <Button onClick={handleDownload} className="gap-2">
-          <Download className="h-4 w-4" /> Download merged PDF
+          <Download className="h-4 w-4" /> {t("downloadMergedPdf")}
         </Button>
       )}
     </div>

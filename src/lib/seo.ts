@@ -1,5 +1,7 @@
+import { routing } from "@/i18n/routing";
+
 export const BASE_URL = "https://nadotools.com";
-export const LOCALES = ["en", "es", "de", "fr", "pt", "zh", "ja", "ru"] as const;
+export const LOCALES = routing.locales;
 
 export function buildAlternates(locale: string, pathSuffix: string) {
   const languages: Record<string, string> = {};

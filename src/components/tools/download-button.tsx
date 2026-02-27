@@ -3,16 +3,12 @@
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
+import { triggerDownload } from "@/lib/utils";
 import type { FileEntry } from "@/hooks/use-progress";
 
 export function downloadFile(file: FileEntry) {
   if (!file.outputBlob || !file.outputName) return;
-  const url = URL.createObjectURL(file.outputBlob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = file.outputName;
-  a.click();
-  URL.revokeObjectURL(url);
+  triggerDownload(file.outputBlob, file.outputName);
 }
 
 export function DownloadAllButton({ files }: { files: FileEntry[] }) {
@@ -30,12 +26,7 @@ export function DownloadAllButton({ files }: { files: FileEntry[] }) {
       }
     });
     const blob = await zip.generateAsync({ type: "blob" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "nadotools-converted.zip";
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(blob, "nadotools-converted.zip");
   };
 
   return (

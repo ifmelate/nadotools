@@ -49,11 +49,12 @@ function HighlightFormats({
     .join("|");
   const regex = new RegExp(`(${pattern})`, "gi");
   const parts = text.split(regex);
+  const lowerFormats = formats.map((f) => f.toLowerCase());
 
   return (
     <>
       {parts.map((part, i) =>
-        regex.test(part) ? (
+        lowerFormats.includes(part.toLowerCase()) ? (
           <span key={i} className={className}>
             {part}
           </span>
@@ -160,8 +161,7 @@ export default async function LandingPage({
           </div>
 
           <h1
-            className="animate-fade-up font-display text-5xl sm:text-7xl lg:text-[5.5rem] font-extrabold tracking-tight max-w-4xl"
-            style={{ animationDelay: "80ms" }}
+            className="font-display text-5xl sm:text-7xl lg:text-[5.5rem] font-extrabold tracking-tight max-w-4xl"
           >
             <span className="bg-gradient-to-br from-foreground via-foreground/90 to-foreground/50 bg-clip-text text-transparent">
               {tc("brand")}

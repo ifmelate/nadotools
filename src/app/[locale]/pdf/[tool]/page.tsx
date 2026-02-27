@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { buildAlternates } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
@@ -54,6 +54,7 @@ export default async function PdfToolPage({
 
   const loc = locale as Locale;
   const seo = config.seo[loc] ?? config.seo.en;
+  const t = await getTranslations({ locale, namespace: "common" });
 
   return (
     <div className="space-y-8">
@@ -63,7 +64,7 @@ export default async function PdfToolPage({
 
       {/* How It Works */}
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">How It Works</h2>
+        <h2 className="text-xl font-semibold">{t("howItWorks")}</h2>
         <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
           {seo.howItWorks.map((step, i) => (
             <li key={i}>{step}</li>

@@ -1,18 +1,15 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import { FileDropzone } from "./file-dropzone";
 import { PrivacyBadge } from "./privacy-badge";
 import { Button } from "@/components/ui/button";
 import { Download, ShieldCheck } from "lucide-react";
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-}
+import { formatSize, triggerDownload } from "@/lib/utils";
 
 export function ImageStripMetadataTool() {
+  const t = useTranslations("common");
   const [processing, setProcessing] = useState(false);
   const [originalFile, setOriginalFile] = useState<File | null>(null);
   const [result, setResult] = useState<Blob | null>(null);
@@ -65,12 +62,7 @@ export function ImageStripMetadataTool() {
   const handleDownload = useCallback(() => {
     if (!result || !originalFile) return;
     const ext = originalFile.type === "image/webp" ? "webp" : "png";
-    const url = URL.createObjectURL(result);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `clean-${originalFile.name.replace(/\.[^.]+$/, "")}.${ext}`;
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(result, `clean-${originalFile.name.replace(/\.[^.]+$/, "")}.${ext}`);
   }, [result, originalFile]);
 
   const handleReset = useCallback(() => {
@@ -94,7 +86,7 @@ export function ImageStripMetadataTool() {
       )}
       {processing && (
         <p className="text-center text-sm text-muted-foreground">
-          Stripping metadata...
+          {t("strippingMetadata")}
         </p>
       )}
       {preview && result && originalFile && (
@@ -103,20 +95,20 @@ export function ImageStripMetadataTool() {
           <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300">
             <ShieldCheck className="h-5 w-5" />
             <span>
-              All metadata (EXIF, GPS, camera info) has been removed.
+              {t("metadataRemoved")}
             </span>
           </div>
 
           {/* Size info */}
           <div className="flex gap-6 text-sm">
             <div>
-              <span className="text-muted-foreground">Original: </span>
+              <span className="text-muted-foreground">{t("original")}: </span>
               <span className="font-medium">
                 {formatSize(originalFile.size)}
               </span>
             </div>
             <div>
-              <span className="text-muted-foreground">Clean: </span>
+              <span className="text-muted-foreground">{t("clean")}: </span>
               <span className="font-medium">{formatSize(result.size)}</span>
             </div>
           </div>
@@ -128,10 +120,10 @@ export function ImageStripMetadataTool() {
           />
           <div className="flex gap-2">
             <Button onClick={handleDownload} className="gap-2">
-              <Download className="h-4 w-4" /> Download Clean Image
+              <Download className="h-4 w-4" /> {t("downloadCleanImage")}
             </Button>
             <Button variant="outline" onClick={handleReset}>
-              Process Another
+              {t("processAnother")}
             </Button>
           </div>
         </div>

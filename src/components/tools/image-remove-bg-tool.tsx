@@ -1,13 +1,16 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import { FileDropzone } from "./file-dropzone";
 import { PrivacyBadge } from "./privacy-badge";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { triggerDownload } from "@/lib/utils";
 
 export function ImageRemoveBgTool() {
+  const t = useTranslations("common");
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<Blob | null>(null);
@@ -43,12 +46,7 @@ export function ImageRemoveBgTool() {
 
   const handleDownload = useCallback(() => {
     if (!result) return;
-    const url = URL.createObjectURL(result);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "removed-bg.png";
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(result, "removed-bg.png");
   }, [result]);
 
   const handleReset = useCallback(() => {
@@ -80,10 +78,10 @@ export function ImageRemoveBgTool() {
           />
           <div className="flex gap-2">
             <Button onClick={handleDownload} className="gap-2">
-              <Download className="h-4 w-4" /> Download PNG
+              <Download className="h-4 w-4" /> {t("downloadPng")}
             </Button>
             <Button variant="outline" onClick={handleReset}>
-              Process Another
+              {t("processAnother")}
             </Button>
           </div>
         </div>
