@@ -1,26 +1,21 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import { FileDropzone } from "./file-dropzone";
 import { PrivacyBadge } from "./privacy-badge";
 import { Button } from "@/components/ui/button";
 import { ClipboardCopy, Download, FileText, Check } from "lucide-react";
+import { triggerDownload } from "@/lib/utils";
+import { getPdfjs } from "@/lib/pdfjs-singleton";
 
 export function PdfExtractTextTool() {
+  const t = useTranslations("common");
   const [extracting, setExtracting] = useState(false);
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const pdfjsRef = useRef<typeof import("pdfjs-dist") | null>(null);
-
-  const loadPdfjs = useCallback(async () => {
-    if (pdfjsRef.current) return pdfjsRef.current;
-    const pdfjs = await import("pdfjs-dist");
-    pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-    pdfjsRef.current = pdfjs;
-    return pdfjs;
-  }, []);
 
   const handleFiles = useCallback(
     async (files: File[]) => {
@@ -34,7 +29,7 @@ export function PdfExtractTextTool() {
       setFileName(file.name.replace(/\.pdf$/i, ""));
 
       try {
-        const pdfjs = await loadPdfjs();
+        const pdfjs = await getPdfjs();
         const data = await file.arrayBuffer();
         const doc = await pdfjs.getDocument({ data }).promise;
         const allText: string[] = [];
@@ -47,18 +42,18 @@ export function PdfExtractTextTool() {
             .map((item) => item.str)
             .join(" ");
           if (pageText.trim()) {
-            allText.push(`--- Page ${i} ---\n${pageText}`);
+            allText.push(`--- ${t("page")} ${i} ---\n${pageText}`);
           }
         }
 
         setText(allText.join("\n\n"));
       } catch {
-        setError("Could not extract text from this PDF.");
+        setError(t("extractTextError"));
       } finally {
         setExtracting(false);
       }
     },
-    [loadPdfjs]
+    [t]
   );
 
   const handleCopy = useCallback(async () => {
@@ -73,12 +68,7 @@ export function PdfExtractTextTool() {
 
   const handleDownloadText = useCallback(() => {
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${fileName}-text.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(blob, `${fileName}-text.txt`);
   }, [text, fileName]);
 
   return (
@@ -94,7 +84,7 @@ export function PdfExtractTextTool() {
 
       {extracting && (
         <p className="text-center text-sm text-muted-foreground">
-          Extracting text...
+          {t("extractingText")}
         </p>
       )}
 
@@ -105,7 +95,7 @@ export function PdfExtractTextTool() {
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               <FileText className="mr-1 inline h-4 w-4" />
-              Extracted text from {fileName}.pdf
+              {t("extractedTextFrom", { fileName: `${fileName}.pdf` })}
             </p>
             <div className="flex gap-2">
               <Button
@@ -119,7 +109,7 @@ export function PdfExtractTextTool() {
                 ) : (
                   <ClipboardCopy className="h-3 w-3" />
                 )}
-                {copied ? "Copied" : "Copy"}
+                {copied ? t("copied") : t("copy")}
               </Button>
               <Button
                 size="sm"
@@ -128,7 +118,7 @@ export function PdfExtractTextTool() {
                 className="gap-1"
               >
                 <Download className="h-3 w-3" />
-                Download .txt
+                {t("downloadTxt")}
               </Button>
             </div>
           </div>

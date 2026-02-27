@@ -13,7 +13,7 @@ interface CanvasConverterToolProps {
 }
 
 export function CanvasConverterTool({ config }: CanvasConverterToolProps) {
-  const { files, addFile, updateFile, removeFile } = useProgress();
+  const { files, addFiles, updateFile, removeFile } = useProgress();
 
   const convertImage = useCallback(
     async (file: File, entry: FileEntry) => {
@@ -33,12 +33,13 @@ export function CanvasConverterTool({ config }: CanvasConverterToolProps) {
       const canvas = document.createElement("canvas");
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Failed to get canvas 2D context");
       ctx.drawImage(img, 0, 0);
       URL.revokeObjectURL(url);
 
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((b) => resolve(b!), config.to.mime, 0.92);
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Canvas toBlob failed"))), config.to.mime, 0.92);
       });
 
       const outputName = file.name.replace(/\.[^.]+$/, config.to.extension);
@@ -54,19 +55,31 @@ export function CanvasConverterTool({ config }: CanvasConverterToolProps) {
 
   const handleFiles = useCallback(
     (inputFiles: File[]) => {
-      inputFiles.forEach((file) => {
-        const entry: FileEntry = {
-          id: crypto.randomUUID(),
-          name: file.name,
-          size: file.size,
-          status: "pending",
-          progress: 0,
-        };
-        addFile(entry);
-        convertImage(file, entry);
-      });
+      const entries: FileEntry[] = inputFiles.map((f) => ({
+        id: crypto.randomUUID(),
+        name: f.name,
+        size: f.size,
+        status: "pending" as const,
+        progress: 0,
+      }));
+
+      addFiles(entries);
+
+      // Process sequentially to avoid unbounded concurrent canvas draws
+      (async () => {
+        for (let i = 0; i < entries.length; i++) {
+          try {
+            await convertImage(inputFiles[i], entries[i]);
+          } catch (err) {
+            updateFile(entries[i].id, {
+              status: "error",
+              error: String(err),
+            });
+          }
+        }
+      })();
     },
-    [addFile, convertImage]
+    [addFiles, convertImage, updateFile]
   );
 
   return (

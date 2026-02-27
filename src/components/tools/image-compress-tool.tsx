@@ -1,19 +1,16 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import { FileDropzone } from "./file-dropzone";
 import { PrivacyBadge } from "./privacy-badge";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Download } from "lucide-react";
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-}
+import { formatSize, triggerDownload } from "@/lib/utils";
 
 export function ImageCompressTool() {
+  const t = useTranslations("common");
   const [originalFile, setOriginalFile] = useState<File | null>(null);
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(
     null
@@ -36,10 +33,13 @@ export function ImageCompressTool() {
       setFormat("image/jpeg");
     }
     const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
     img.onload = () => {
       setOriginalImage(img);
+      URL.revokeObjectURL(objectUrl);
     };
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => URL.revokeObjectURL(objectUrl);
+    img.src = objectUrl;
   }, []);
 
   const handleCompress = useCallback(() => {
@@ -65,12 +65,7 @@ export function ImageCompressTool() {
   const handleDownload = useCallback(() => {
     if (!result) return;
     const ext = format === "image/webp" ? "webp" : "jpg";
-    const url = URL.createObjectURL(result);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `compressed.${ext}`;
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(result, `compressed.${ext}`);
   }, [result, format]);
 
   const handleReset = useCallback(() => {
@@ -98,7 +93,7 @@ export function ImageCompressTool() {
         <div className="space-y-4">
           {/* Format selector */}
           <div className="flex items-center gap-3">
-            <label className="text-sm font-medium">Output format:</label>
+            <label className="text-sm font-medium">{t("outputFormat")}:</label>
             <select
               value={format}
               onChange={(e) =>
@@ -130,7 +125,7 @@ export function ImageCompressTool() {
             />
           </div>
 
-          <Button onClick={handleCompress}>Compress Image</Button>
+          <Button onClick={handleCompress}>{t("compressImage")}</Button>
         </div>
       )}
       {preview && result && (
@@ -138,20 +133,22 @@ export function ImageCompressTool() {
           {/* Size comparison */}
           <div className="flex gap-6 text-sm">
             <div>
-              <span className="text-muted-foreground">Before: </span>
+              <span className="text-muted-foreground">{t("before")}: </span>
               <span className="font-medium">
                 {originalFile ? formatSize(originalFile.size) : ""}
               </span>
             </div>
             <div>
-              <span className="text-muted-foreground">After: </span>
+              <span className="text-muted-foreground">{t("after")}: </span>
               <span className="font-medium">{formatSize(result.size)}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">Saved: </span>
-              <span className="font-medium text-green-600">
+              <span className="text-muted-foreground">{t("saved")}: </span>
+              <span className={`font-medium ${originalFile && result.size < originalFile.size ? "text-green-600" : "text-muted-foreground"}`}>
                 {originalFile
-                  ? `${Math.round(((originalFile.size - result.size) / originalFile.size) * 100)}%`
+                  ? result.size < originalFile.size
+                    ? `${Math.round(((originalFile.size - result.size) / originalFile.size) * 100)}%`
+                    : t("noReduction")
                   : ""}
               </span>
             </div>
@@ -163,10 +160,10 @@ export function ImageCompressTool() {
           />
           <div className="flex gap-2">
             <Button onClick={handleDownload} className="gap-2">
-              <Download className="h-4 w-4" /> Download
+              <Download className="h-4 w-4" /> {t("download")}
             </Button>
             <Button variant="outline" onClick={handleReset}>
-              Compress Another
+              {t("compressAnother")}
             </Button>
           </div>
         </div>

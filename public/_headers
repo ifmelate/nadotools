@@ -6,10 +6,18 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Embedder-Policy: credentialless
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://static.cloudflareinsights.com https://unpkg.com https://cdn.jsdelivr.net; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self' https://unpkg.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://cloudflareinsights.com https://staticimgly.com blob:; font-src 'self'; object-src 'none'; base-uri 'self'
+  # TODO: Replace 'unsafe-inline' in script-src with hash-based CSP once WASM files are self-hosted.
+  # 'unsafe-inline' is currently required by Next.js static export inline scripts (JSON-LD, __NEXT_DATA__).
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://static.cloudflareinsights.com https://unpkg.com https://cdn.jsdelivr.net; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self' https://unpkg.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://cloudflareinsights.com https://staticimgly.com blob:; font-src 'self'; object-src 'none'; base-uri 'self'
+
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
 
 /wasm/*
   Cache-Control: public, max-age=31536000, immutable
 
 /models/*
   Cache-Control: public, max-age=31536000, immutable
+
+/*.html
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400

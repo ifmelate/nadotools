@@ -1,19 +1,16 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import { PDFDocument } from "pdf-lib";
 import { FileDropzone } from "./file-dropzone";
 import { PrivacyBadge } from "./privacy-badge";
 import { Button } from "@/components/ui/button";
 import { Download, FileDown } from "lucide-react";
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-}
+import { formatSize, triggerDownload } from "@/lib/utils";
 
 export function PdfCompressTool() {
+  const t = useTranslations("common");
   const [compressing, setCompressing] = useState(false);
   const [originalSize, setOriginalSize] = useState(0);
   const [compressedSize, setCompressedSize] = useState(0);
@@ -36,25 +33,20 @@ export function PdfCompressTool() {
 
       // Re-save the PDF. pdf-lib strips unused objects, metadata duplication, etc.
       const bytes = await doc.save();
-      const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+      const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
 
       setCompressedSize(blob.size);
       setResult(blob);
     } catch {
-      setError("Could not compress the PDF file.");
+      setError(t("compressPdfError"));
     } finally {
       setCompressing(false);
     }
-  }, []);
+  }, [t]);
 
   const handleDownload = useCallback(() => {
     if (!result) return;
-    const url = URL.createObjectURL(result);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${fileName}-compressed.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(result, `${fileName}-compressed.pdf`);
   }, [result, fileName]);
 
   const reductionPercent =
@@ -75,7 +67,7 @@ export function PdfCompressTool() {
 
       {compressing && (
         <p className="text-center text-sm text-muted-foreground">
-          Compressing...
+          {t("compressing")}
         </p>
       )}
 
@@ -90,18 +82,18 @@ export function PdfCompressTool() {
             <div className="flex-1 space-y-1">
               <p className="text-sm font-medium">{fileName}.pdf</p>
               <div className="flex gap-4 text-xs text-muted-foreground">
-                <span>Original: {formatSize(originalSize)}</span>
-                <span>Compressed: {formatSize(compressedSize)}</span>
+                <span>{t("original")}: {formatSize(originalSize)}</span>
+                <span>{t("compressed")}: {formatSize(compressedSize)}</span>
                 <span className={reductionPercent > 0 ? "text-green-600 dark:text-green-400" : ""}>
                   {reductionPercent > 0
-                    ? `${reductionPercent}% smaller`
-                    : "No size reduction (file is already optimized)"}
+                    ? `${reductionPercent}% ${t("smaller")}`
+                    : t("alreadyOptimized")}
                 </span>
               </div>
             </div>
           </div>
           <Button onClick={handleDownload} className="gap-2">
-            <Download className="h-4 w-4" /> Download compressed PDF
+            <Download className="h-4 w-4" /> {t("downloadCompressedPdf")}
           </Button>
         </div>
       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { FileDropzone } from "./file-dropzone";
 import { FileList } from "./file-list";
 import { DownloadAllButton, downloadFile } from "./download-button";
@@ -8,6 +9,7 @@ import { PrivacyBadge } from "./privacy-badge";
 import { useProgress, type FileEntry } from "@/hooks/use-progress";
 import type { ConversionConfig } from "@/config/types";
 import { CanvasConverterTool } from "./canvas-converter-tool";
+import { getFFmpeg } from "@/lib/ffmpeg-singleton";
 
 interface ConverterToolProps {
   config: ConversionConfig;
@@ -22,70 +24,33 @@ export function ConverterTool({ config }: ConverterToolProps) {
 }
 
 function FfmpegConverterTool({ config }: ConverterToolProps) {
+  const t = useTranslations("common");
   const { files, addFiles, updateFile, removeFile } = useProgress();
   const ffmpegRef = useRef<import("@ffmpeg/ffmpeg").FFmpeg | null>(null);
-  const loadingRef = useRef(false);
+  const cancelledRef = useRef(false);
   const [isReady, setIsReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (config.engine !== "ffmpeg") return;
 
-    let cancelled = false;
+    cancelledRef.current = false;
 
-    async function init() {
-      if (loadingRef.current || ffmpegRef.current) return;
-      loadingRef.current = true;
-
-      try {
-        const { FFmpeg } = await import("@ffmpeg/ffmpeg");
-        const { toBlobURL } = await import("@ffmpeg/util");
-
-        if (cancelled) return;
-
-        const ffmpeg = new FFmpeg();
-        const useMultiThread = typeof SharedArrayBuffer !== "undefined";
-        const pkg = useMultiThread ? "core-mt" : "core";
-        const baseURL = `https://unpkg.com/@ffmpeg/${pkg}@0.12.10/dist/umd`;
-
-        await ffmpeg.load({
-          coreURL: await toBlobURL(
-            `${baseURL}/ffmpeg-core.js`,
-            "text/javascript"
-          ),
-          wasmURL: await toBlobURL(
-            `${baseURL}/ffmpeg-core.wasm`,
-            "application/wasm"
-          ),
-          ...(useMultiThread && {
-            workerURL: await toBlobURL(
-              `${baseURL}/ffmpeg-core.worker.js`,
-              "text/javascript"
-            ),
-          }),
-        });
-
-        if (cancelled) {
-          ffmpeg.terminate();
-          return;
-        }
-
+    getFFmpeg()
+      .then((ffmpeg) => {
+        if (cancelledRef.current) return;
         ffmpegRef.current = ffmpeg;
         setIsReady(true);
-      } catch (err) {
-        if (!cancelled) {
+      })
+      .catch((err) => {
+        if (!cancelledRef.current) {
           setLoadError(String(err));
         }
-      } finally {
-        loadingRef.current = false;
-      }
-    }
-
-    init();
+      });
 
     return () => {
-      cancelled = true;
-      ffmpegRef.current?.terminate();
+      cancelledRef.current = true;
+      // Don't terminate — the singleton is shared across navigations
       ffmpegRef.current = null;
     };
   }, [config.engine]);
@@ -102,49 +67,51 @@ function FfmpegConverterTool({ config }: ConverterToolProps) {
 
       addFiles(entries);
 
-      entries.forEach((entry, i) => {
-        const file = inputFiles[i];
-        const reader = new FileReader();
-        reader.onload = async () => {
+      // Process files sequentially — FFmpeg WASM is single-threaded
+      (async () => {
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i];
+          const file = inputFiles[i];
+
+          if (cancelledRef.current) return;
+
           const ffmpeg = ffmpegRef.current;
           if (!ffmpeg) {
             updateFile(entry.id, {
               status: "error",
               error: "Converter engine not loaded",
             });
-            return;
+            continue;
           }
+
+          const outputName = file.name.replace(
+            /\.[^.]+$/,
+            config.to.extension
+          );
+          const onProgress = ({ progress }: { progress: number }) => {
+            updateFile(entry.id, {
+              progress: Math.round(progress * 100),
+            });
+          };
 
           try {
             updateFile(entry.id, { status: "processing", progress: 0 });
-
-            const onProgress = ({ progress }: { progress: number }) => {
-              updateFile(entry.id, {
-                progress: Math.round(progress * 100),
-              });
-            };
             ffmpeg.on("progress", onProgress);
 
-            const outputName = file.name.replace(
-              /\.[^.]+$/,
-              config.to.extension
-            );
-            await ffmpeg.writeFile(
-              file.name,
-              new Uint8Array(reader.result as ArrayBuffer)
-            );
+            const data = new Uint8Array(await file.arrayBuffer());
+            await ffmpeg.writeFile(file.name, data);
 
             let success = false;
 
             // Try remux first (nearly instant — just copies streams)
             if (config.tryRemux) {
-              try {
-                await ffmpeg.exec([
-                  "-i", file.name, "-c", "copy",
-                  "-movflags", "+faststart", outputName,
-                ]);
+              const exitCode = await ffmpeg.exec([
+                "-i", file.name, "-c", "copy",
+                "-movflags", "+faststart", outputName,
+              ]);
+              if (exitCode === 0) {
                 success = true;
-              } catch {
+              } else {
                 // Remux failed (incompatible codecs), fall through to re-encode
                 try { await ffmpeg.deleteFile(outputName); } catch { /* ignore */ }
               }
@@ -153,30 +120,36 @@ function FfmpegConverterTool({ config }: ConverterToolProps) {
             // Re-encode if remux wasn't attempted or failed
             if (!success) {
               const extraArgs = config.ffmpegArgs ?? ["-preset", "ultrafast"];
-              await ffmpeg.exec(["-i", file.name, ...extraArgs, outputName]);
+              const exitCode = await ffmpeg.exec(["-i", file.name, ...extraArgs, outputName]);
+              if (exitCode !== 0) {
+                throw new Error(`FFmpeg exited with code ${exitCode}`);
+              }
             }
 
-            const data = (await ffmpeg.readFile(outputName)) as Uint8Array;
+            const output = (await ffmpeg.readFile(outputName)) as Uint8Array;
 
-            await ffmpeg.deleteFile(file.name);
-            await ffmpeg.deleteFile(outputName);
-            ffmpeg.off("progress", onProgress);
+            if (cancelledRef.current) return;
 
             updateFile(entry.id, {
               status: "done",
               progress: 100,
-              outputBlob: new Blob([new Uint8Array(data) as BlobPart]),
+              outputBlob: new Blob([output.slice()]),
               outputName,
             });
           } catch (err) {
-            updateFile(entry.id, {
-              status: "error",
-              error: String(err),
-            });
+            if (!cancelledRef.current) {
+              updateFile(entry.id, {
+                status: "error",
+                error: String(err),
+              });
+            }
+          } finally {
+            ffmpeg.off("progress", onProgress);
+            try { await ffmpeg.deleteFile(file.name); } catch { /* ignore */ }
+            try { await ffmpeg.deleteFile(outputName); } catch { /* ignore */ }
           }
-        };
-        reader.readAsArrayBuffer(file);
-      });
+        }
+      })();
     },
     [addFiles, config, updateFile]
   );
@@ -189,14 +162,14 @@ function FfmpegConverterTool({ config }: ConverterToolProps) {
       {loadError && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-3 space-y-1">
           <p className="text-sm font-medium text-destructive">
-            Failed to load converter engine
+            {t("engineLoadFailed")}
           </p>
           <p className="text-xs text-muted-foreground break-all">{loadError}</p>
         </div>
       )}
       {!isReady && !loadError && (
         <p className="text-sm text-muted-foreground text-center">
-          Loading converter engine…
+          {t("loadingEngine")}
         </p>
       )}
       <FileDropzone accept={[config.from.mime]} onFiles={handleFiles} />

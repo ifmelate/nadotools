@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { FileDropzone } from "./file-dropzone";
 import { PrivacyBadge } from "./privacy-badge";
 import { CropOverlay, CropRect } from "./crop-overlay";
 import { Button } from "@/components/ui/button";
 import { Download, ImagePlus, Lock, RotateCcw, Unlock } from "lucide-react";
+import { triggerDownload } from "@/lib/utils";
 
 interface Preset {
   label: string;
@@ -20,6 +22,7 @@ const PRESETS: Preset[] = [
 ];
 
 export function ImageResizeTool() {
+  const t = useTranslations("common");
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(
     null
   );
@@ -45,6 +48,7 @@ export function ImageResizeTool() {
     if (!file) return;
     setOriginalName(file.name.replace(/\.[^.]+$/, ""));
     const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
     img.onload = () => {
       setOriginalImage(img);
       setWidth(img.naturalWidth);
@@ -56,8 +60,10 @@ export function ImageResizeTool() {
         h: img.naturalHeight,
       });
       setAspectRatioVal(img.naturalWidth / img.naturalHeight);
+      URL.revokeObjectURL(objectUrl);
     };
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => URL.revokeObjectURL(objectUrl);
+    img.src = objectUrl;
   }, []);
 
   // When crop rect changes from dragging, sync width/height
@@ -217,12 +223,7 @@ export function ImageResizeTool() {
 
   const handleDownload = useCallback(() => {
     if (!result) return;
-    const url = URL.createObjectURL(result);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${originalName || "resized"}-${width}x${height}.png`;
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(result, `${originalName || "resized"}-${width}x${height}.png`);
   }, [result, originalName, width, height]);
 
   const handleReset = useCallback(() => {
@@ -289,14 +290,14 @@ export function ImageResizeTool() {
                 title="Reset crop to full image"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
-                Reset Crop
+                {t("resetCrop")}
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center gap-1.5 rounded bg-black/60 px-2 py-1 text-xs text-white transition-colors hover:bg-black/80"
               >
                 <ImagePlus className="h-3.5 w-3.5" />
-                Change Image
+                {t("changeImage")}
               </button>
             </div>
             <input
@@ -329,7 +330,7 @@ export function ImageResizeTool() {
           {/* Dimension inputs */}
           <div className="flex items-center gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-muted-foreground">Width</label>
+              <label className="text-xs text-muted-foreground">{t("width")}</label>
               <input
                 type="number"
                 min={1}
@@ -341,7 +342,7 @@ export function ImageResizeTool() {
             <button
               onClick={handleToggleAspectLock}
               className="mt-5 rounded p-1 text-muted-foreground hover:text-foreground"
-              title={aspectLocked ? "Unlock aspect ratio" : "Lock aspect ratio"}
+              title={aspectLocked ? t("unlockAspect") : t("lockAspect")}
             >
               {aspectLocked ? (
                 <Lock className="h-4 w-4" />
@@ -350,7 +351,7 @@ export function ImageResizeTool() {
               )}
             </button>
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-muted-foreground">Height</label>
+              <label className="text-xs text-muted-foreground">{t("height")}</label>
               <input
                 type="number"
                 min={1}
@@ -362,13 +363,13 @@ export function ImageResizeTool() {
             <span className="mt-5 text-xs text-muted-foreground">px</span>
           </div>
 
-          <Button onClick={handleResize}>Resize & Crop</Button>
+          <Button onClick={handleResize}>{t("resizeCrop")}</Button>
         </div>
       )}
       {preview && (
         <div className="flex flex-col items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            Resized to {width} x {height}
+            {t("resizedTo", { width, height })}
           </p>
           <img
             src={preview}
@@ -377,10 +378,10 @@ export function ImageResizeTool() {
           />
           <div className="flex gap-2">
             <Button onClick={handleDownload} className="gap-2">
-              <Download className="h-4 w-4" /> Download
+              <Download className="h-4 w-4" /> {t("download")}
             </Button>
             <Button variant="outline" onClick={handleReset}>
-              Resize Another
+              {t("resizeAnother")}
             </Button>
           </div>
         </div>
