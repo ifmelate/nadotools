@@ -52,7 +52,7 @@ export function PdfToImageTool() {
       try {
         const pdfjs = await getPdfjs();
         const data = await file.arrayBuffer();
-        const doc = await pdfjs.getDocument({ data }).promise;
+        const doc = await pdfjs.getDocument({ data, isEvalSupported: false }).promise;
         const newPages: PageImage[] = [];
 
         for (let i = 1; i <= doc.numPages; i++) {

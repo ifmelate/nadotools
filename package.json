@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "sync-pdfjs-worker": "node -e \"require('fs').copyFileSync(require.resolve('pdfjs-dist/build/pdf.worker.min.mjs'), 'public/wasm/pdf.worker.min.mjs')\"",
+    "predev": "npm run sync-pdfjs-worker",
+    "prebuild": "npm run sync-pdfjs-worker",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

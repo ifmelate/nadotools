@@ -31,7 +31,7 @@ export function PdfExtractTextTool() {
       try {
         const pdfjs = await getPdfjs();
         const data = await file.arrayBuffer();
-        const doc = await pdfjs.getDocument({ data }).promise;
+        const doc = await pdfjs.getDocument({ data, isEvalSupported: false }).promise;
         const allText: string[] = [];
 
         for (let i = 1; i <= doc.numPages; i++) {

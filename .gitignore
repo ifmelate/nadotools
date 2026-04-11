@@ -26,6 +26,9 @@
 .DS_Store
 *.pem
 
+# generated assets (copied from node_modules by prebuild/predev)
+/public/wasm/pdf.worker.min.mjs
+
 # debug
 npm-debug.log*
 yarn-debug.log*

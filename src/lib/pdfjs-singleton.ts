@@ -2,7 +2,8 @@
  * Shared pdfjs-dist instance to avoid re-setting the worker on every component mount.
  * Mirrors the ffmpeg-singleton pattern.
  *
- * TODO: Self-host the worker file in /public/wasm/ to eliminate CDN supply-chain risk.
+ * Worker is self-hosted at /wasm/pdf.worker.min.mjs (copied from node_modules via the
+ * prebuild script in package.json) to eliminate third-party CDN supply-chain risk.
  */
 
 import type * as PdfjsLib from "pdfjs-dist";
@@ -16,7 +17,7 @@ export function getPdfjs(): Promise<typeof PdfjsLib> {
 
   loadPromise = (async () => {
     const pdfjs = await import("pdfjs-dist");
-    pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+    pdfjs.GlobalWorkerOptions.workerSrc = "/wasm/pdf.worker.min.mjs";
     pdfjsInstance = pdfjs;
     return pdfjs;
   })().catch((err) => {
