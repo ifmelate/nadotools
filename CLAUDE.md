@@ -36,7 +36,7 @@ Run a single E2E test: `npx playwright test tests/e2e/navigation.spec.ts`
 Each config entry includes `seo: Record<Locale, SeoData>` with title, description, h1, howItWorks, and FAQ for every locale.
 
 **Processing engines** (`engine` field in configs):
-- `ffmpeg` — Video/audio via FFmpeg.wasm in a Web Worker (`src/workers/ffmpeg.worker.ts`)
+- `ffmpeg` — Video/audio via FFmpeg.wasm loaded through `src/lib/ffmpeg-singleton.ts`; core files are self-hosted under `public/wasm/ffmpeg-core{,-mt}/` and synced from node_modules by `scripts/sync-vendor-assets.mjs` (runs on predev/prebuild)
 - `canvas` — Image conversion via Canvas API (`src/components/tools/canvas-converter-tool.tsx`)
 - `pdf` — PDF manipulation via pdf-lib + pdfjs-dist
 - `pandoc` — Document conversion (future)

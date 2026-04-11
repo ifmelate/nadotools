@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "sync-pdfjs-worker": "node -e \"require('fs').copyFileSync(require.resolve('pdfjs-dist/build/pdf.worker.min.mjs'), 'public/wasm/pdf.worker.min.mjs')\"",
-    "predev": "npm run sync-pdfjs-worker",
-    "prebuild": "npm run sync-pdfjs-worker",
+    "sync-vendor-assets": "node scripts/sync-vendor-assets.mjs",
+    "predev": "npm run sync-vendor-assets",
+    "prebuild": "npm run sync-vendor-assets",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -16,6 +16,8 @@
     "test:all": "vitest run && playwright test"
   },
   "dependencies": {
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/core-mt": "^0.12.10",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
     "@imgly/background-removal": "^1.7.0",

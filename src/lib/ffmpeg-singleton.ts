@@ -2,8 +2,9 @@
  * Shared FFmpeg WASM instance to avoid re-downloading ~30MB on every page navigation.
  * The instance is created once and reused across component mounts.
  *
- * TODO: Self-host the WASM files in /public/wasm/ to eliminate CDN supply-chain risk.
- * The _headers file already has cache rules for /wasm/*.
+ * Core files are self-hosted under /public/wasm/ffmpeg-core{,-mt}/ (copied from
+ * node_modules by scripts/sync-vendor-assets.mjs via the prebuild hook) so no
+ * third-party CDN is needed at runtime.
  */
 
 import type { FFmpeg } from "@ffmpeg/ffmpeg";
@@ -21,8 +22,7 @@ export function getFFmpeg(): Promise<FFmpeg> {
 
     const ffmpeg = new FFmpeg();
     const useMultiThread = typeof SharedArrayBuffer !== "undefined";
-    const pkg = useMultiThread ? "core-mt" : "core";
-    const baseURL = `https://unpkg.com/@ffmpeg/${pkg}@0.12.10/dist/umd`;
+    const baseURL = useMultiThread ? "/wasm/ffmpeg-core-mt" : "/wasm/ffmpeg-core";
 
     await ffmpeg.load({
       coreURL: await toBlobURL(
