@@ -26,10 +26,8 @@
 .DS_Store
 *.pem
 
-# generated vendor assets (copied from node_modules by scripts/sync-vendor-assets.mjs)
-/public/wasm/pdf.worker.min.mjs
-/public/wasm/ffmpeg-core/
-/public/wasm/ffmpeg-core-mt/
+# generated vendor assets (synced from node_modules by scripts/sync-vendor-assets.mjs)
+/public/wasm/
 
 # debug
 npm-debug.log*
