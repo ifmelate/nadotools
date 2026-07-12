@@ -29,16 +29,6 @@ export function FileDropzone({ accept, multiple = true, onFiles }: FileDropzoneP
       onDrop={onDrop}
       onClick={openPicker}
     >
-      {/* Subtle background pattern */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.015] transition-opacity duration-300 group-hover:opacity-[0.03]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, currentColor 0.5px, transparent 0.5px)",
-          backgroundSize: "20px 20px",
-        }}
-      />
-
       <div
         className={cn(
           "relative flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-300",
@@ -50,7 +40,7 @@ export function FileDropzone({ accept, multiple = true, onFiles }: FileDropzoneP
         {isDragging ? (
           <FileUp className="h-6 w-6" />
         ) : (
-          <Upload className="h-6 w-6 animate-float" />
+          <Upload className="h-6 w-6" />
         )}
       </div>
 

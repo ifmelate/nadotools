@@ -11,9 +11,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import {
-  ArrowRight,
   ArrowRightLeft,
   FileVideo,
   FileAudio,
@@ -155,9 +153,7 @@ export default async function ConvertHubPage({
     <div className="space-y-12">
       <div className="space-y-2">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-category-convert/10">
-            <ArrowRightLeft className="h-4 w-4 text-category-convert" />
-          </div>
+          <ArrowRightLeft className="h-5 w-5 text-category-convert" />
           <h1 className="font-display text-3xl font-bold tracking-tight">
             {hubHeadings[loc] ?? hubHeadings.en}
           </h1>
@@ -171,37 +167,25 @@ export default async function ConvertHubPage({
 
         return (
           <section key={type} className="space-y-4">
-            <ScrollReveal>
-              <div className="flex items-center gap-2">
-                <GroupIcon className="h-4 w-4 text-category-convert" />
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  {typeLabels[type]?.[loc] ?? typeLabels[type]?.en ?? type}
-                </h2>
-              </div>
-            </ScrollReveal>
+            <div className="flex items-center gap-2">
+              <GroupIcon className="h-4 w-4 text-category-convert" />
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                {typeLabels[type]?.[loc] ?? typeLabels[type]?.en ?? type}
+              </h2>
+            </div>
 
-            <ScrollReveal
-              stagger
-              className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-            >
-              {items.map((c, i) => (
-                <Link
-                  key={c.slug}
-                  href={`/convert/${c.slug}`}
-                  style={{ "--i": i } as React.CSSProperties}
-                >
-                  <Card className="group h-full transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-category-convert/40">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((c) => (
+                <Link key={c.slug} href={`/convert/${c.slug}`}>
+                  <Card className="h-full transition-colors hover:border-category-convert/40">
                     <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-base font-display">
-                          <HighlightFormats
-                            text={c.seo[loc]?.h1 ?? c.seo.en.h1}
-                            formats={[c.from.format, c.to.format]}
-                            className="text-category-convert font-bold"
-                          />
-                        </CardTitle>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
-                      </div>
+                      <CardTitle className="text-base font-display">
+                        <HighlightFormats
+                          text={c.seo[loc]?.h1 ?? c.seo.en.h1}
+                          formats={[c.from.format, c.to.format]}
+                          className="text-category-convert font-bold"
+                        />
+                      </CardTitle>
                       <CardDescription>
                         {c.from.format.toUpperCase()} &rarr; {c.to.format.toUpperCase()}
                       </CardDescription>
@@ -209,7 +193,7 @@ export default async function ConvertHubPage({
                   </Card>
                 </Link>
               ))}
-            </ScrollReveal>
+            </div>
           </section>
         );
       })}
