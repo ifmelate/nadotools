@@ -19,7 +19,11 @@ export function useFileDrop({ accept, maxSize, multiple = true, onFiles }: UseFi
       let files = Array.from(fileList);
       if (accept) {
         files = files.filter((f) =>
-          accept.some((type) => f.type === type || f.name.endsWith(type))
+          accept.some((entry) =>
+            entry.startsWith(".")
+              ? f.name.toLowerCase().endsWith(entry.toLowerCase())
+              : f.type.toLowerCase() === entry.toLowerCase()
+          )
         );
       }
       if (maxSize) {

@@ -56,7 +56,12 @@ export function FileDropzone({ accept, multiple = true, onFiles }: FileDropzoneP
         </p>
         {accept && accept.length > 0 && (
           <p className="text-xs text-muted-foreground/60">
-            {accept.map((a) => a.replace(".", "").toUpperCase()).join(", ")}
+            {(accept.some((a) => a.startsWith("."))
+              ? accept.filter((a) => a.startsWith("."))
+              : accept
+            )
+              .map((a) => a.replace(/^\./, "").toUpperCase())
+              .join(", ")}
           </p>
         )}
       </div>

@@ -87,7 +87,7 @@ export function CanvasConverterTool({ config }: CanvasConverterToolProps) {
       <div className="flex justify-center">
         <PrivacyBadge />
       </div>
-      <FileDropzone accept={[config.from.mime]} onFiles={handleFiles} />
+      <FileDropzone accept={[config.from.mime, config.from.extension]} onFiles={handleFiles} />
       <FileList files={files} onRemove={removeFile} onDownload={downloadFile} />
       <div className="flex justify-center">
         <DownloadAllButton files={files} />
